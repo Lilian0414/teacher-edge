@@ -50,6 +50,16 @@ def test_human_detection_is_normalized() -> None:
     assert event.inference.classes_name == ["person"]
 
 
+def test_bare_watcher_token_is_accepted_for_allowed_device() -> None:
+    response = make_client().post(
+        "/v1/notification/event",
+        json=PAYLOAD,
+        headers={"Authorization": "test-token"},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"code": 200}
+
+
 def test_invalid_or_missing_auth_is_rejected() -> None:
     client = make_client()
     for headers in ({}, {"Authorization": "wrong-token"}):

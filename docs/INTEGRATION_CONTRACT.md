@@ -11,8 +11,14 @@ M1 implements the device-facing boundary only:
 - `GET /health` returns `{"status":"healthy"}`.
 - `POST /v1/notification/event` accepts the Watcher HTTP alarm JSON shape and
   returns `{"code":200}` after authentication and normalization.
-- `Authorization` is compared in constant time with `TEACHER_EDGE_SHARED_TOKEN`.
-  A `Bearer ` prefix is accepted but not required.
+- Seeed stock firmware copies the Watcher `notification_proxy.token` unchanged
+  into the `Authorization` header rather than imposing a fixed `Bearer` scheme.
+  `TEACHER_EDGE_SHARED_TOKEN` must therefore exactly match the configured
+  `notification_proxy.token`. The bridge compares it in constant time and
+  accepts the stock bare-token form as well as a `Bearer ` prefix.
+- The shared token must be explicitly generated and managed on the Raspberry Pi
+  and Watcher. Deployments must not rely on factory/generated credentials or
+  commit an actual credential to this repository.
 - `TEACHER_EDGE_ALLOWED_DEVICE_EUIS` may contain a comma-separated allowlist. An
   empty list permits any device EUI with the valid shared token.
 - The request becomes an in-process `DeviceEvent` with source, device ID, event

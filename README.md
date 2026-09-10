@@ -121,6 +121,14 @@ export TEACHER_EDGE_ALLOWED_DEVICE_EUIS='<watcher-device-eui>'
 uvicorn bridge.app:app --host 0.0.0.0 --port 8000
 ```
 
+Seeed stock firmware sends the Watcher `notification_proxy.token` unchanged in
+the `Authorization` header; it does not add a fixed `Bearer` scheme. Set
+`TEACHER_EDGE_SHARED_TOKEN` to exactly the same value as
+`notification_proxy.token`. A Watcher configured with a bare token therefore
+sends, and the bridge accepts, `Authorization: <local-shared-token>`. Generate
+and manage this shared token yourself on the Raspberry Pi and Watcher; do not
+depend on factory/generated device credentials or commit the real value.
+
 Sanitized request example:
 
 ```bash

@@ -1,6 +1,6 @@
 """Typed Watcher transport and normalized device-event models."""
 
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
