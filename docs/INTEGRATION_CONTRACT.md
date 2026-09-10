@@ -4,6 +4,24 @@ Status: **initial contract / must be re-verified against the exact Teacher revis
 
 This document describes the boundary between `teacher-edge` and `Lilian0414/teacher`.
 
+## 0. Implemented Watcher ingress contract
+
+M1 implements the device-facing boundary only:
+
+- `GET /health` returns `{"status":"healthy"}`.
+- `POST /v1/notification/event` accepts the Watcher HTTP alarm JSON shape and
+  returns `{"code":200}` after authentication and normalization.
+- `Authorization` is compared in constant time with `TEACHER_EDGE_SHARED_TOKEN`.
+  A `Bearer ` prefix is accepted but not required.
+- `TEACHER_EDGE_ALLOWED_DEVICE_EUIS` may contain a comma-separated allowlist. An
+  empty list permits any device EUI with the valid shared token.
+- The request becomes an in-process `DeviceEvent` with source, device ID, event
+  type, timestamp, text, inference, and original request ID.
+
+No Teacher endpoint is consumed by M1, so there is no Teacher revision or API
+schema dependency to pin. A later Teacher adapter must complete the version
+compatibility record below before making calls.
+
 ## 1. Ownership rule
 
 `teacher-edge` consumes Teacher Core as an HTTP service.

@@ -2,6 +2,11 @@
 
 Status: **test plan only; no hardware UAT has passed yet**.
 
+The Watcher HTTP alarm → temporary Pi receiver transport was hardware-verified
+before the M1 bridge implementation. The committed FastAPI bridge has only been
+verified locally; it must not be described as hardware-UAT passed until a run
+records the device, host, software revision, path, and observation below.
+
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 
 ## Evidence header

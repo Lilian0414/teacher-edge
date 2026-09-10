@@ -52,6 +52,13 @@ Acceptance criteria:
 - secrets are not committed
 - exact Teacher SHA is recorded
 
+### M1 Watcher HTTP ingress increment
+
+Implemented locally: the hardware-spike transport is represented by a FastAPI
+health endpoint and authenticated `POST /v1/notification/event`, with typed
+payload normalization. This increment does not complete the broader Pi host
+baseline above and does not implement the M2 Teacher text round-trip.
+
 ## M2 — Device bridge skeleton + text round-trip
 
 Goal: prove the architecture before audio complexity.

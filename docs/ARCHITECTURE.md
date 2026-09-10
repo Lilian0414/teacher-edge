@@ -1,6 +1,7 @@
 # Target Architecture
 
-Status: **proposed / not yet implemented in this repository**.
+Status: **partially implemented**. The Watcher → Pi HTTP ingress is implemented;
+Teacher integration, audio, and outbound Watcher delivery remain proposed.
 
 This document defines the intended system boundary before implementation begins.
 
@@ -136,7 +137,8 @@ Teacher Core
 
 This preserves Teacher's existing localhost-oriented trust boundary and avoids exposing the full learning API directly to every LAN client.
 
-The bridge should eventually implement explicit device authentication / pairing. The exact mechanism is intentionally undecided until the Watcher firmware / transport path is selected.
+The M1 HTTP ingress uses an environment-configured shared token and optional
+device-EUI allowlist. A pairing mechanism remains a deferred decision.
 
 ## 5. State ownership
 
