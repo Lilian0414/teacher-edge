@@ -74,7 +74,7 @@ Watcher speaker + display
 
 第一版不要求 wake word、camera understanding、gesture 或 proactive notification；這些在基本 round-trip 穩定後再加入。
 
-## Planned repository layout
+## Repository layout
 
 ```text
 teacher-edge/
@@ -93,16 +93,50 @@ teacher-edge/
 └── README.md
 ```
 
-以上是 target layout；在有實作證據前，不應把規劃內容描述成已完成。
+`bridge/` 的 Watcher HTTP ingress 與其 focused tests 已實作；其餘目錄仍是 target layout。
 
 ## Current status
 
-目前為 **architecture / hardware integration bootstrap** 階段。
+目前為 **Watcher HTTP ingress implemented / locally verified** 階段。
 
 - Teacher Core：既有專案，另 repo 維護
-- Raspberry Pi host：硬體已具備，尚未在本 repo 建立 runtime
-- Watcher integration：尚未實作
+- Raspberry Pi host：FastAPI ingress runtime 已實作，尚未在本 repo 完成 systemd 部署
+- Watcher integration：`POST /v1/notification/event` ingress 已實作；Teacher adapter、audio 與 outbound rendering 尚未實作
 - ElevenLabs TTS：已選為目標 provider，尚未在本 repo 串接
-- Hardware UAT：尚未開始
+- Hardware UAT：Watcher → Pi 的 transport spike 已有 issue evidence；本次 bridge revision 尚未執行 hardware UAT
 
 詳見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)、[`docs/INTEGRATION_CONTRACT.md`](docs/INTEGRATION_CONTRACT.md)、[`docs/ROADMAP.md`](docs/ROADMAP.md) 與 [`docs/UAT.md`](docs/UAT.md)。
+
+## Run the M1 ingress on Raspberry Pi
+
+Python 3.11+ is required. Keep real values in the Pi environment (or an untracked
+`.env` consumed by the service manager):
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
+export TEACHER_EDGE_SHARED_TOKEN='<local-shared-token>'
+export TEACHER_EDGE_ALLOWED_DEVICE_EUIS='<watcher-device-eui>'
+uvicorn bridge.app:app --host 0.0.0.0 --port 8000
+```
+
+Seeed stock firmware sends the Watcher `notification_proxy.token` unchanged in
+the `Authorization` header; it does not add a fixed `Bearer` scheme. Set
+`TEACHER_EDGE_SHARED_TOKEN` to exactly the same value as
+`notification_proxy.token`. A Watcher configured with a bare token therefore
+sends, and the bridge accepts, `Authorization: <local-shared-token>`. Generate
+and manage this shared token yourself on the Raspberry Pi and Watcher; do not
+depend on factory/generated device credentials or commit the real value.
+
+Sanitized request example:
+
+```bash
+curl -X POST http://PI_LAN_IP:8000/v1/notification/event \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer <local-shared-token>' \
+  -d '{"requestId":"example-request","deviceEui":"<watcher-device-eui>","events":{"timestamp":1788983266392,"text":"human detected","data":{"inference":{"boxes":[[145,262,240,308,83,0]],"classes_name":["person"]}}}}'
+```
+
+The bridge only validates, normalizes, and logs non-secret event metadata in M1.
+It does not call Teacher Core, persist events, or send a response to the Watcher.
