@@ -1,7 +1,7 @@
 # Hardware UAT
 
 Status: **M1.1 Watcher-to-Pi ingress and edge reboot/systemd hardware UAT
-passed; Teacher Core reboot/provider UAT remains pending**.
+passed; M1.2 Teacher Core deployment hardware UAT passed**.
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge
@@ -30,12 +30,25 @@ is outside the M1.1 scope.
 For the repeatable systemd reboot procedure and evidence requirements, see
 [`DEPLOYMENT.md`](DEPLOYMENT.md#edge-reboot-uat-hardware-passed-reusable-procedure).
 
-M1.2 adds pinned Teacher Core service, migration, localhost binding, and
-persistent-database deployment artifacts. The separate
-[Teacher Core reboot/provider procedure](DEPLOYMENT.md#teacher-core-reboot-and-provider-uat-real-pi-only)
-must pass on the target Pi before those properties are called hardware verified.
-It records the exact Teacher SHA and one direct real conversation turn without
-implementing an edge TeacherClient.
+The M1.2 Teacher Core deployment was hardware-verified on a real Raspberry Pi
+using Python 3.13.5 and Teacher revision
+`c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5`. The installer completed
+successfully, and `teacher-core` was observed as `enabled` and `active`.
+`GET http://127.0.0.1:8000/health` returned healthy JSON, while the port 8000
+listener was bound to `127.0.0.1:8000` and not `0.0.0.0:8000`.
+
+Direct Core UAT created a conversation with `POST /v1/conversations`, then
+`POST /v1/conversations/{id}/messages` returned `ok: true` with a real assistant
+response through Groq. After a Pi reboot, that conversation and both messages
+remained retrievable, demonstrating SQLite persistence; `teacher-core` also
+auto-started and remained healthy. Finally, after
+`sudo systemctl kill -s SIGKILL teacher-core`, the service and health endpoint
+recovered, verifying `Restart=on-failure`. No provider key or other secret is
+recorded here.
+
+This was direct Teacher Core UAT. M2 edge-to-Teacher client integration remains
+unimplemented, so these results do not demonstrate an edge-mediated Teacher
+conversation turn.
 
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 

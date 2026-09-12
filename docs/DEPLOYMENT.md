@@ -75,7 +75,7 @@ The removal commands retain database and secrets for recovery. For destructive
 uninstall, separately remove `/etc/teacher`, `/var/lib/teacher`, and the Teacher
 checkout only after backing up or explicitly discarding SQLite state.
 
-### Teacher Core reboot and provider UAT (real Pi only)
+### Teacher Core reboot and provider UAT (hardware passed; reusable procedure)
 
 1. Record Pi model/RAM, Pi OS, `${TEACHER_PYTHON:-python3} --version`, Teacher SHA from
    `git -C "$HOME/teacher" rev-parse HEAD`, and teacher-edge SHA.
@@ -95,8 +95,10 @@ checkout only after backing up or explicitly discarding SQLite state.
 
 Expected results are an active unit, successful health response, localhost-only
 listener, durable database after reboot, and one persisted real conversation
-turn. The artifacts are locally verifiable; hardware UAT remains pending until
-the results are recorded in `docs/UAT.md`.
+turn. These results passed on real Pi hardware for M1.2; see
+[`UAT.md`](UAT.md) for the sanitized evidence. Keep this procedure for
+verification of later revisions. It exercises Core directly and does not imply
+that the M2 edge-to-Teacher client exists.
 
 ## Install
 

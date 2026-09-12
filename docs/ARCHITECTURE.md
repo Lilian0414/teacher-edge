@@ -1,8 +1,8 @@
 # Target Architecture
 
 Status: **partially implemented**. The Watcher → Pi HTTP ingress and pinned
-Teacher Core Pi service artifacts are implemented; hardware verification,
-edge-to-Teacher integration, audio, and outbound Watcher delivery remain pending.
+Teacher Core Pi service are implemented and hardware-verified; edge-to-Teacher
+integration, audio, and outbound Watcher delivery remain pending.
 
 This document defines the intended system boundary before implementation begins.
 
