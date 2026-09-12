@@ -1,0 +1,23 @@
+[Unit]
+Description=Teacher Edge Watcher HTTP bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_GROUP@
+WorkingDirectory=@REPOSITORY_PATH@
+EnvironmentFile=/etc/teacher-edge/teacher-edge.env
+ExecStart=@REPOSITORY_PATH@/.venv/bin/uvicorn bridge.app:app --host 0.0.0.0 --port 8834
+Restart=on-failure
+RestartSec=5
+
+# The bridge needs network access but does not need to write to the repository.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=read-only
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
