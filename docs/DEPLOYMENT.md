@@ -4,6 +4,87 @@ The tracked unit runs only the implemented Watcher ingress. It exposes the
 bridge on `0.0.0.0:8834`; it does not expose or call Teacher Core. A future
 Teacher adapter must continue to reach Teacher Core through a localhost URL.
 
+## Teacher Core baseline (pinned upstream)
+
+Teacher Core is installed from `Lilian0414/teacher` at exactly
+`c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5`. At that revision it requires
+Python 3.12+, provides `companion-core`, uses `requirements.lock`, reads
+`COMPANION_HOST`/`COMPANION_PORT`, and exposes `GET /health`. Its default
+database path is not suitable for Linux, so this deployment always supplies
+`COMPANION_DATABASE_URL`.
+
+Clone and pin Teacher in a permanent location as the runtime user, then install
+it (the installer rejects any other commit):
+
+```bash
+sudo apt-get install -y python3.12 python3.12-venv git
+git clone https://github.com/Lilian0414/teacher.git "$HOME/teacher"
+git -C "$HOME/teacher" checkout --detach c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5
+sudo ./deploy/raspberry-pi/install-teacher-core.sh "$HOME/teacher"
+sudoedit /etc/teacher/teacher.env
+sudo chmod 600 /etc/teacher/teacher.env
+sudo systemctl enable --now teacher-core
+curl --fail --silent http://127.0.0.1:8000/health
+```
+
+The dependency lock is installed first and the checkout is then installed
+editable with `--no-deps`. The checkout `.venv` is created as the invoking sudo
+user. `/var/lib/teacher` is persistent and runtime-user-owned;
+`/etc/teacher/teacher.env` is external, root-owned, mode `0600`, preserved by
+reinstall, and never printed. The template keeps embeddings disabled and uses
+`sqlite:////var/lib/teacher/companion.sqlite3`.
+
+The unit runs `alembic upgrade head` with the configured environment before
+every start, making initial migration and upgrades repeatable, then starts
+`companion-core`. It binds to `127.0.0.1:8000`, restarts on failure, and starts
+at boot when enabled. Do not expose Core to the LAN; a future M2 bridge client
+will call it over localhost.
+
+### Operate, update, and remove Teacher Core
+
+```bash
+systemctl status teacher-core --no-pager
+journalctl -u teacher-core -n 100 --no-pager
+curl --fail --silent http://127.0.0.1:8000/health
+sudo systemctl restart teacher-core
+
+git -C "$HOME/teacher" fetch origin
+git -C "$HOME/teacher" checkout --detach c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5
+sudo ./deploy/raspberry-pi/install-teacher-core.sh "$HOME/teacher"
+sudo systemctl restart teacher-core
+
+sudo systemctl disable --now teacher-core
+sudo rm -f /etc/systemd/system/teacher-core.service
+sudo systemctl daemon-reload
+```
+
+The removal commands retain database and secrets for recovery. For destructive
+uninstall, separately remove `/etc/teacher`, `/var/lib/teacher`, and the Teacher
+checkout only after backing up or explicitly discarding SQLite state.
+
+### Teacher Core reboot and provider UAT (real Pi only)
+
+1. Record Pi model/RAM, Pi OS, `python3.12 --version`, Teacher SHA from
+   `git -C "$HOME/teacher" rev-parse HEAD`, and teacher-edge SHA.
+2. Record a known conversation ID (not private content), run `sudo reboot`, and
+   do not manually start either service.
+3. Verify `systemctl is-enabled teacher-core` is `enabled`,
+   `systemctl is-active teacher-core` is `active`, `ss -ltnp` shows port 8000
+   only on `127.0.0.1`, and the localhost health request succeeds.
+4. Confirm the recorded conversation remains available after the reboot.
+5. On the Pi, inspect `http://127.0.0.1:8000/openapi.json` and use its pinned
+   schemas to make one real `POST /v1/conversations`, followed by one
+   `POST /v1/conversations/{conversation_id}/messages`. Record sanitized HTTP
+   statuses, IDs, and assistant success to prove Groq and persistence. This is
+   direct Core UAT, **not** an edge TeacherClient.
+6. Run `sudo systemctl kill -s SIGKILL teacher-core`, wait five seconds, and
+   confirm the service returns to active and health succeeds.
+
+Expected results are an active unit, successful health response, localhost-only
+listener, durable database after reboot, and one persisted real conversation
+turn. The artifacts are locally verifiable; hardware UAT remains pending until
+the results are recorded in `docs/UAT.md`.
+
 ## Install
 
 Prerequisites are a Raspberry Pi with Python 3.11+, `python3-venv`, and this

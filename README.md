@@ -97,10 +97,10 @@ teacher-edge/
 
 ## Current status
 
-目前為 **Watcher HTTP ingress implemented / hardware-UAT passed** 階段。
+目前為 **Watcher ingress hardware-UAT passed / Teacher Core Pi deployment implemented locally** 階段。
 
 - Teacher Core：既有專案，另 repo 維護
-- Raspberry Pi host：FastAPI ingress runtime 與 systemd deployment 已實作；reboot UAT 尚待實機執行
+- Raspberry Pi host：FastAPI ingress 與 pinned Teacher Core systemd deployment 已實作；兩者的 reboot UAT 尚待實機執行
 - Watcher integration：`POST /v1/notification/event` ingress 已實作；Teacher adapter、audio 與 outbound rendering 尚未實作
 - ElevenLabs TTS：已選為目標 provider，尚未在本 repo 串接
 - Hardware UAT：M1 bridge revision 的 Watcher → Pi transport/auth path 已於實機通過；systemd 的 Pi reboot persistence UAT 尚待執行

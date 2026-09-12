@@ -1,7 +1,7 @@
 # Hardware UAT
 
 Status: **M1 Watcher-to-Pi ingress hardware UAT passed before the systemd
-deployment; reboot/systemd UAT remains pending**.
+deployment; edge and Teacher Core reboot/systemd UAT remain pending**.
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge
@@ -23,6 +23,13 @@ is outside the M1.1 scope.
 
 For the repeatable systemd reboot procedure and required evidence, see
 [`DEPLOYMENT.md`](DEPLOYMENT.md#reboot-uat-must-run-on-the-real-pi).
+
+M1.2 adds pinned Teacher Core service, migration, localhost binding, and
+persistent-database deployment artifacts. The separate
+[Teacher Core reboot/provider procedure](DEPLOYMENT.md#teacher-core-reboot-and-provider-uat-real-pi-only)
+must pass on the target Pi before those properties are called hardware verified.
+It records the exact Teacher SHA and one direct real conversation turn without
+implementing an edge TeacherClient.
 
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 
