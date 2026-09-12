@@ -23,9 +23,16 @@ case "${REPOSITORY_PATH}" in
     ;;
 esac
 
-python3 -m venv "${REPOSITORY_PATH}/.venv"
-"${REPOSITORY_PATH}/.venv/bin/python" -m pip install --upgrade pip
-"${REPOSITORY_PATH}/.venv/bin/python" -m pip install -e "${REPOSITORY_PATH}"
+# Keep checkout-local runtime files owned by the unprivileged service account.
+# The chown also repairs environments created by older installer revisions.
+if [[ -e "${REPOSITORY_PATH}/.venv" ]]; then
+  chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${REPOSITORY_PATH}/.venv"
+fi
+runuser --user "${SERVICE_USER}" -- python3 -m venv "${REPOSITORY_PATH}/.venv"
+runuser --user "${SERVICE_USER}" -- \
+  "${REPOSITORY_PATH}/.venv/bin/python" -m pip install --upgrade pip
+runuser --user "${SERVICE_USER}" -- \
+  "${REPOSITORY_PATH}/.venv/bin/python" -m pip install -e "${REPOSITORY_PATH}"
 
 install -d -m 0750 -o root -g "${SERVICE_GROUP}" /etc/teacher-edge
 if [[ ! -e /etc/teacher-edge/teacher-edge.env ]]; then

@@ -97,13 +97,13 @@ teacher-edge/
 
 ## Current status
 
-目前為 **Watcher HTTP ingress implemented / locally verified** 階段。
+目前為 **Watcher HTTP ingress implemented / hardware-UAT passed** 階段。
 
 - Teacher Core：既有專案，另 repo 維護
 - Raspberry Pi host：FastAPI ingress runtime 與 systemd deployment 已實作；reboot UAT 尚待實機執行
 - Watcher integration：`POST /v1/notification/event` ingress 已實作；Teacher adapter、audio 與 outbound rendering 尚未實作
 - ElevenLabs TTS：已選為目標 provider，尚未在本 repo 串接
-- Hardware UAT：Watcher → Pi 的 transport spike 已有 issue evidence；本次 bridge revision 尚未執行 hardware UAT
+- Hardware UAT：M1 bridge revision 的 Watcher → Pi transport/auth path 已於實機通過；systemd 的 Pi reboot persistence UAT 尚待執行
 
 詳見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)、[`docs/INTEGRATION_CONTRACT.md`](docs/INTEGRATION_CONTRACT.md)、[`docs/ROADMAP.md`](docs/ROADMAP.md) 與 [`docs/UAT.md`](docs/UAT.md)。
 
@@ -138,8 +138,9 @@ curl -X POST http://PI_LAN_IP:8834/v1/notification/event \
   -d '{"requestId":"example-request","deviceEui":"<watcher-device-eui>","events":{"timestamp":1788983266392,"text":"human detected","data":{"inference":{"boxes":[[145,262,240,308,83,0]],"classes_name":["person"]}}}}'
 ```
 
-The bridge only validates, normalizes, and logs non-secret event metadata in M1.
-It does not call Teacher Core, persist events, or send a response to the Watcher.
+The bridge only validates, normalizes, and logs non-secret event metadata in M1,
+then acknowledges a successful notification with `{"code":200}`. It does not call
+Teacher Core, persist events, or send an outbound rendered response to the Watcher.
 
 For reboot-safe Raspberry Pi installation and operational commands, see
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).

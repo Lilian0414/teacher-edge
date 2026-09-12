@@ -17,10 +17,13 @@ sudo chmod 600 /etc/teacher-edge/teacher-edge.env
 sudo systemctl enable --now teacher-edge
 ```
 
-The installer uses the invoking sudo user as the unprivileged runtime user,
-creates `.venv`, installs this checkout, renders the unit with the absolute
-checkout path, and creates the external environment file only when absent. It
-never displays environment-file contents and never overwrites existing values.
+The installer uses the invoking sudo user as the unprivileged runtime user. It
+creates `.venv` and installs the checkout as that user, so runtime files in the
+repository are not left owned by root. Root access is limited to repairing an
+older `.venv` ownership, writing `/etc`, and managing the systemd unit. The
+installer renders the unit with the absolute checkout path and creates the
+external environment file only when absent. It never displays environment-file
+contents and never overwrites existing values.
 Run it as the intended runtime user via `sudo`; do not invoke it from a root
 login unless the `pi` fallback user exists.
 
@@ -76,16 +79,25 @@ must be sanitized or retained.
 
 ## Reboot UAT (must run on the real Pi)
 
+This procedure verifies **Pi reboot persistence only**. Before starting, the
+Watcher must already be configured with the `http alarm` runtime taskflow and
+must remain powered on throughout the test. Do not reboot or power-cycle the
+Watcher as part of this procedure: current Watcher behavior resets its runtime
+taskflow from `http alarm` to `sensecraft alarm` after a Watcher reboot.
+Persisting or reprovisioning the Watcher taskflow is a known limitation and is
+outside the M1.1 systemd deployment scope.
+
 1. Record the Pi model/RAM, Pi OS, Python version, Watcher model/firmware,
    teacher-edge SHA, network topology, and test time without recording secrets.
-2. Confirm the service and localhost health check are healthy, then reboot with
-   `sudo reboot` without manually starting Uvicorn afterward.
+2. Confirm that the powered-on Watcher is using the `http alarm` taskflow and
+   that the service and localhost health check are healthy. Reboot **only the
+   Pi** with `sudo reboot`, without manually starting Uvicorn afterward.
 3. After the Pi returns, confirm `systemctl is-enabled teacher-edge` reports
    `enabled`, `systemctl is-active teacher-edge` reports `active`, and `/health`
    returns the healthy JSON.
-4. Power the Watcher independently, trigger human detection, and verify the
-   Watcher sends its HTTP event to `http://PI_LAN_IP:8834`; confirm authenticated
-   ingress returns `200 OK` and sanitized metadata appears in the Pi journal.
+4. Without rebooting the Watcher, trigger human detection and verify it sends
+   its HTTP event to `http://PI_LAN_IP:8834`; confirm authenticated ingress
+   returns `200 OK` and sanitized metadata appears in the Pi journal.
 5. Stop the process with `sudo systemctl kill -s SIGKILL teacher-edge`, wait at
    least five seconds, and verify systemd returns it to `active` and `/health`
    succeeds. Record the observed result and revision in `docs/UAT.md`.
