@@ -1,6 +1,7 @@
 # Teacher ↔ Edge Integration Contract
 
-Status: **initial contract / must be re-verified against the exact Teacher revision used for implementation**.
+Status: **deployment contract verified for the pinned Teacher revision; client
+payload schemas remain deferred to M2**.
 
 This document describes the boundary between `teacher-edge` and `Lilian0414/teacher`.
 
@@ -27,6 +28,22 @@ M1 implements the device-facing boundary only:
 No Teacher endpoint is consumed by M1, so there is no Teacher revision or API
 schema dependency to pin. A later Teacher adapter must complete the version
 compatibility record below before making calls.
+
+M1.2 deploys, but does not consume, Teacher Core using this runtime contract:
+
+```text
+Teacher repository: Lilian0414/teacher
+Teacher base branch: main
+Teacher base SHA: c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5
+Entry point: companion-core
+Health: GET http://127.0.0.1:8000/health
+Later M2 endpoints: POST /v1/conversations
+                    POST /v1/conversations/{conversation_id}/messages
+```
+
+Payload schemas are intentionally not encoded here yet. Manual deployment UAT
+uses the pinned Core OpenAPI schema; M2 must document and contract-test exact
+request/response assumptions before adding a client.
 
 ## 1. Ownership rule
 

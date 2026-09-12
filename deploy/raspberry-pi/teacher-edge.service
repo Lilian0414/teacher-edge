@@ -9,7 +9,7 @@ User=@SERVICE_USER@
 Group=@SERVICE_GROUP@
 WorkingDirectory=@REPOSITORY_PATH@
 EnvironmentFile=/etc/teacher-edge/teacher-edge.env
-ExecStart=@REPOSITORY_PATH@/.venv/bin/uvicorn bridge.app:app --host 0.0.0.0 --port 8834
+ExecStart=@REPOSITORY_PATH@/.venv/bin/uvicorn bridge.app:app --host 0.0.0.0 --port 8834 --use-colors
 Restart=on-failure
 RestartSec=5
 

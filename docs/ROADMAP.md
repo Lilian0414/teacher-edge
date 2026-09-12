@@ -59,6 +59,15 @@ health endpoint and authenticated `POST /v1/notification/event`, with typed
 payload normalization. This increment does not complete the broader Pi host
 baseline above and does not implement the M2 Teacher text round-trip.
 
+### M1.2 Teacher Core Pi service increment
+
+Hardware-UAT passed: reproducible artifacts installed the pinned Teacher
+revision on a real Pi as an unprivileged, localhost-only systemd service with
+external configuration, persistent SQLite, and repeatable Alembic migration.
+Service enablement, health, a direct Groq-backed Core turn, reboot persistence,
+localhost-only binding, and on-failure recovery were verified. No edge
+TeacherClient is included; that integration remains M2 work.
+
 ## M2 — Device bridge skeleton + text round-trip
 
 Goal: prove the architecture before audio complexity.
