@@ -15,6 +15,7 @@ fi
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 TEACHER_REPOSITORY_PATH=$(realpath -- "$1")
 SERVICE_USER=${SUDO_USER:-pi}
+TEACHER_PYTHON=${TEACHER_PYTHON:-python3}
 
 if ! id "${SERVICE_USER}" >/dev/null 2>&1; then
   echo "Runtime user does not exist: ${SERVICE_USER}" >&2
@@ -38,9 +39,14 @@ if [[ "${ACTUAL_SHA}" != "${PINNED_TEACHER_SHA}" ]]; then
   echo "Teacher checkout must be pinned to ${PINNED_TEACHER_SHA}; found ${ACTUAL_SHA}." >&2
   exit 1
 fi
-if ! runuser --user "${SERVICE_USER}" -- python3.12 -c \
+if [[ "${TEACHER_PYTHON}" =~ [[:space:]] ]]; then
+  echo "TEACHER_PYTHON must name a single executable, without arguments." >&2
+  exit 1
+fi
+if ! runuser --user "${SERVICE_USER}" -- "${TEACHER_PYTHON}" -c \
   'import sys; raise SystemExit(sys.version_info < (3, 12))'; then
-  echo "Python 3.12 or newer is required (expected command: python3.12)." >&2
+  echo "Python 3.12 or newer is required (checked: ${TEACHER_PYTHON})." >&2
+  echo "Set TEACHER_PYTHON to another interpreter executable if needed." >&2
   exit 1
 fi
 
@@ -48,7 +54,7 @@ fi
 if [[ -e "${TEACHER_REPOSITORY_PATH}/.venv" ]]; then
   chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${TEACHER_REPOSITORY_PATH}/.venv"
 fi
-runuser --user "${SERVICE_USER}" -- python3.12 -m venv \
+runuser --user "${SERVICE_USER}" -- "${TEACHER_PYTHON}" -m venv \
   "${TEACHER_REPOSITORY_PATH}/.venv"
 runuser --user "${SERVICE_USER}" -- \
   "${TEACHER_REPOSITORY_PATH}/.venv/bin/python" -m pip install --upgrade pip

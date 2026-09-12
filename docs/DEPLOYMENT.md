@@ -16,8 +16,12 @@ database path is not suitable for Linux, so this deployment always supplies
 Clone and pin Teacher in a permanent location as the runtime user, then install
 it (the installer rejects any other commit):
 
+Install `git`, Python 3.12 or newer, and that interpreter's `venv` support. On
+a Raspberry Pi OS/Debian release whose default `python3` is new enough:
+
 ```bash
-sudo apt-get install -y python3.12 python3.12-venv git
+sudo apt-get install -y python3 python3-venv git
+python3 -c 'import sys; assert sys.version_info >= (3, 12)'
 git clone https://github.com/Lilian0414/teacher.git "$HOME/teacher"
 git -C "$HOME/teacher" checkout --detach c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5
 sudo ./deploy/raspberry-pi/install-teacher-core.sh "$HOME/teacher"
@@ -25,6 +29,15 @@ sudoedit /etc/teacher/teacher.env
 sudo chmod 600 /etc/teacher/teacher.env
 sudo systemctl enable --now teacher-core
 curl --fail --silent http://127.0.0.1:8000/health
+```
+
+The installer uses `python3` by default and validates its version. If a newer
+interpreter is installed under a versioned or custom name, select it explicitly
+while preserving the setting through `sudo`, for example:
+
+```bash
+sudo env TEACHER_PYTHON=python3.13 \
+  ./deploy/raspberry-pi/install-teacher-core.sh "$HOME/teacher"
 ```
 
 The dependency lock is installed first and the checkout is then installed
@@ -64,7 +77,7 @@ checkout only after backing up or explicitly discarding SQLite state.
 
 ### Teacher Core reboot and provider UAT (real Pi only)
 
-1. Record Pi model/RAM, Pi OS, `python3.12 --version`, Teacher SHA from
+1. Record Pi model/RAM, Pi OS, `${TEACHER_PYTHON:-python3} --version`, Teacher SHA from
    `git -C "$HOME/teacher" rev-parse HEAD`, and teacher-edge SHA.
 2. Record a known conversation ID (not private content), run `sudo reboot`, and
    do not manually start either service.
@@ -158,7 +171,7 @@ To fully uninstall, also remove `/etc/teacher-edge` explicitly. Remove the
 checkout separately only after deciding whether any local operational evidence
 must be sanitized or retained.
 
-## Reboot UAT (must run on the real Pi)
+## Edge reboot UAT (hardware passed; reusable procedure)
 
 This procedure verifies **Pi reboot persistence only**. Before starting, the
 Watcher must already be configured with the `http alarm` runtime taskflow and
@@ -183,5 +196,8 @@ outside the M1.1 systemd deployment scope.
    least five seconds, and verify systemd returns it to `active` and `/health`
    succeeds. Record the observed result and revision in `docs/UAT.md`.
 
-The deployment definition is locally verifiable, but reboot persistence and
-Watcher connectivity are not proven until these steps pass on the target Pi.
+This procedure passed on a real Pi at teacher-edge main revision
+`a5dc33140c15ced0a6e66ff3817f49a8fef7bbcc`: after reboot the unit was enabled,
+active, and healthy, and a powered-on real Watcher retaining `http alarm` sent a
+new authenticated human-detection event that returned `200 OK`. See
+[`UAT.md`](UAT.md) for the sanitized evidence and its recorded limitations.

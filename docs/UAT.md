@@ -1,7 +1,7 @@
 # Hardware UAT
 
-Status: **M1 Watcher-to-Pi ingress hardware UAT passed before the systemd
-deployment; edge and Teacher Core reboot/systemd UAT remain pending**.
+Status: **M1.1 Watcher-to-Pi ingress and edge reboot/systemd hardware UAT
+passed; Teacher Core reboot/provider UAT remains pending**.
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge
@@ -9,11 +9,17 @@ authenticated it, and returned `200 OK`. No shared-token value or Authorization
 header is retained here. The verified teacher-edge M1 main revision was
 `77904412bbbfb21f72a63d951163201da79c94b8`; the sanitized observed path was
 **real human detection → authenticated `POST /v1/notification/event` → `200
-OK`**. This evidence establishes the M1 transport/auth path; it does not
-establish that the newly added systemd service survives reboot. The original
-evidence did not include enough other sanitized hardware/software revision
-detail to reconstruct the environment, so those details remain an explicit
-limitation and must be captured during reboot UAT.
+OK`**.
+
+The M1.1 systemd path was subsequently verified on a real Raspberry Pi at
+teacher-edge main revision `a5dc33140c15ced0a6e66ff3817f49a8fef7bbcc` (PR #5
+merge commit). After reboot, `teacher-edge` was observed as both `enabled` and
+`active`, and `/health` succeeded. The real Watcher remained powered on with
+its `http alarm` taskflow unchanged; another real human detection traversed the
+authenticated `POST /v1/notification/event` ingress and returned `200 OK`.
+Device model, OS, firmware, network topology, and test time were not included
+in the supplied sanitized result, so they remain evidence limitations rather
+than being inferred here.
 
 The M1.1 reboot procedure covers Pi reboot persistence only. The Watcher must
 remain powered on and configured with the `http alarm` runtime taskflow during
@@ -21,8 +27,8 @@ that test. Rebooting the Watcher currently resets the runtime taskflow to
 `sensecraft alarm`; persistent Watcher provisioning is a known limitation and
 is outside the M1.1 scope.
 
-For the repeatable systemd reboot procedure and required evidence, see
-[`DEPLOYMENT.md`](DEPLOYMENT.md#reboot-uat-must-run-on-the-real-pi).
+For the repeatable systemd reboot procedure and evidence requirements, see
+[`DEPLOYMENT.md`](DEPLOYMENT.md#edge-reboot-uat-hardware-passed-reusable-procedure).
 
 M1.2 adds pinned Teacher Core service, migration, localhost binding, and
 persistent-database deployment artifacts. The separate
