@@ -1,11 +1,28 @@
 # Hardware UAT
 
-Status: **test plan only; no hardware UAT has passed yet**.
+Status: **M1 Watcher-to-Pi ingress hardware UAT passed before the systemd
+deployment; reboot/systemd UAT remains pending**.
 
-The Watcher HTTP alarm → temporary Pi receiver transport was hardware-verified
-before the M1 bridge implementation. The committed FastAPI bridge has only been
-verified locally; it must not be described as hardware-UAT passed until a run
-records the device, host, software revision, path, and observation below.
+The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
+Watcher human detection produced an HTTP notification, the Pi bridge
+authenticated it, and returned `200 OK`. No shared-token value or Authorization
+header is retained here. The verified teacher-edge M1 main revision was
+`77904412bbbfb21f72a63d951163201da79c94b8`; the sanitized observed path was
+**real human detection → authenticated `POST /v1/notification/event` → `200
+OK`**. This evidence establishes the M1 transport/auth path; it does not
+establish that the newly added systemd service survives reboot. The original
+evidence did not include enough other sanitized hardware/software revision
+detail to reconstruct the environment, so those details remain an explicit
+limitation and must be captured during reboot UAT.
+
+The M1.1 reboot procedure covers Pi reboot persistence only. The Watcher must
+remain powered on and configured with the `http alarm` runtime taskflow during
+that test. Rebooting the Watcher currently resets the runtime taskflow to
+`sensecraft alarm`; persistent Watcher provisioning is a known limitation and
+is outside the M1.1 scope.
+
+For the repeatable systemd reboot procedure and required evidence, see
+[`DEPLOYMENT.md`](DEPLOYMENT.md#reboot-uat-must-run-on-the-real-pi).
 
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 
