@@ -255,14 +255,20 @@ not be reported as a Teacher voice conversation, STT, or provider-backed TTS tes
    header above, including Watcher model and stock firmware version.
 2. Configure the same generated shared token and allowlisted EUI on the Pi and
    Watcher without recording either value in the UAT artifact.
+   Confirm the request carries `Authorization`, `API-OBITER-DEVICE-EUI`,
+   `Session-Id`, and `Content-Type: application/octet-stream` headers (record
+   header names only, never their secret values).
 3. Point the stock Watcher push-to-talk URL at
    `http://<pi-lan-address>:<port>/v2/watcher/talk/audio_stream` and retain the
    existing HTTP-alarm taskflow configuration.
 4. With the MacBook absent from the runtime path, press and hold talk, speak a
    short phrase, and release. Record a sanitized Pi log showing the endpoint and
    HTTP status, but not request audio or authorization headers.
-5. Confirm the Watcher accepts the JSON part, displays `Teacher Edge audio
-   transport test`, and plays the short deterministic tone exactly once.
+5. Confirm the response is `application/octet-stream`, its `Content-Length`
+   matches the complete body, and the bytes are compact JSON followed immediately
+   by the literal `---sensecraftboundary---\n` and WAV audio. Confirm the Watcher
+   uses `data.screen_text` to display `Teacher Edge audio transport test` and
+   plays the short deterministic tone exactly once.
 6. Repeat with an upload larger than the configured limit (lower the limit for a
    safe test) and confirm `413`; interrupt one upload and confirm the service
    stays healthy and accepts the next normal push-to-talk request.
@@ -270,7 +276,7 @@ not be reported as a Teacher voice conversation, STT, or provider-backed TTS tes
    ensure those existing paths still work.
 
 Record the observed transport as: **Watcher stock push-to-talk → authenticated
-bounded binary upload → multipart JSON + WAV test response → Watcher display and
+bounded binary upload → raw JSON + stock separator + WAV test response → Watcher display and
 speaker**. Mark this section hardware-UAT passed only after attaching the
 secret-free device/host/revision/result evidence. It is currently implemented
 and locally testable, not hardware-UAT passed.

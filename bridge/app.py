@@ -3,7 +3,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response
 
 from bridge.config import Settings
 from bridge.events import EventHandler, log_event, normalize_event
@@ -18,7 +18,6 @@ from bridge.security import authorize_device
 from bridge.sessions import ConversationSessions
 from bridge.teacher_client import TeacherClient, TeacherClientError
 from bridge.watcher_audio import (
-    RESPONSE_BOUNDARY,
     framed_test_response,
     read_bounded_audio,
 )
@@ -86,12 +85,16 @@ def create_app(
         request: Request,
         device_eui: str | None = Query(default=None, alias="deviceEui"),
         authorization: str | None = Header(default=None),
+        stock_device_eui: str | None = Header(
+            default=None, alias="API-OBITER-DEVICE-EUI"
+        ),
         x_device_eui: str | None = Header(default=None),
-    ) -> StreamingResponse:
+    ) -> Response:
         """Accept one stock Watcher upload and return a transport-only test response."""
 
         device_id = (
-            device_eui
+            stock_device_eui
+            or device_eui
             or request.query_params.get("device_eui")
             or request.query_params.get("deviceSn")
             or x_device_eui
@@ -106,9 +109,11 @@ def create_app(
         # Parsing is deliberately completed before response headers are sent. No STT,
         # conversation, or TTS provider is part of this compatibility increment.
         await read_bounded_audio(request, runtime_settings.watcher_audio_max_bytes)
-        return StreamingResponse(
-            framed_test_response(),
-            media_type=f'multipart/mixed; boundary="{RESPONSE_BOUNDARY}"',
+        body = framed_test_response()
+        return Response(
+            content=body,
+            media_type="application/octet-stream",
+            headers={"Content-Length": str(len(body))},
         )
 
     return app

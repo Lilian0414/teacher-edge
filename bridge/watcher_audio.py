@@ -5,13 +5,11 @@ from __future__ import annotations
 import json
 import math
 import struct
-from collections.abc import AsyncIterator
-
 from fastapi import HTTPException, Request, status
 from starlette.requests import ClientDisconnect
 
 
-RESPONSE_BOUNDARY = "teacher-edge-watcher-audio"
+RESPONSE_SEPARATOR = b"---sensecraftboundary---\n"
 TEST_MESSAGE = "Teacher Edge audio transport test"
 
 
@@ -75,25 +73,19 @@ def deterministic_test_wav() -> bytes:
     return header + samples
 
 
-def framed_test_response() -> AsyncIterator[bytes]:
-    """Yield complete multipart parts using CRLF framing understood by stock firmware."""
+def framed_test_response() -> bytes:
+    """Build the stock compact-JSON, separator, and WAV response body."""
 
     metadata = json.dumps(
-        {"code": 200, "data": {"text": TEST_MESSAGE}},
+        {
+            "code": 200,
+            "data": {
+                "stt_result": TEST_MESSAGE,
+                "screen_text": TEST_MESSAGE,
+                "mode": "text",
+                "duration": 0.15,
+            },
+        },
         separators=(",", ":"),
     ).encode()
-    audio = deterministic_test_wav()
-
-    async def parts() -> AsyncIterator[bytes]:
-        marker = f"--{RESPONSE_BOUNDARY}\r\n".encode()
-        yield marker
-        yield b"Content-Type: application/json\r\n"
-        yield f"Content-Length: {len(metadata)}\r\n\r\n".encode()
-        yield metadata + b"\r\n"
-        yield marker
-        yield b"Content-Type: audio/wav\r\n"
-        yield f"Content-Length: {len(audio)}\r\n\r\n".encode()
-        yield audio + b"\r\n"
-        yield f"--{RESPONSE_BOUNDARY}--\r\n".encode()
-
-    return parts()
+    return metadata + RESPONSE_SEPARATOR + deterministic_test_wav()
