@@ -246,6 +246,35 @@ Record:
 
 Increase the duration only after the basic 24-hour run is stable.
 
+## M3.0 stock Watcher push-to-talk transport UAT (not yet hardware-verified)
+
+This procedure verifies only the compatibility transport added in M3.0. It must
+not be reported as a Teacher voice conversation, STT, or provider-backed TTS test.
+
+1. Deploy the exact candidate teacher-edge SHA on the Pi and record the evidence
+   header above, including Watcher model and stock firmware version.
+2. Configure the same generated shared token and allowlisted EUI on the Pi and
+   Watcher without recording either value in the UAT artifact.
+3. Point the stock Watcher push-to-talk URL at
+   `http://<pi-lan-address>:<port>/v2/watcher/talk/audio_stream` and retain the
+   existing HTTP-alarm taskflow configuration.
+4. With the MacBook absent from the runtime path, press and hold talk, speak a
+   short phrase, and release. Record a sanitized Pi log showing the endpoint and
+   HTTP status, but not request audio or authorization headers.
+5. Confirm the Watcher accepts the JSON part, displays `Teacher Edge audio
+   transport test`, and plays the short deterministic tone exactly once.
+6. Repeat with an upload larger than the configured limit (lower the limit for a
+   safe test) and confirm `413`; interrupt one upload and confirm the service
+   stays healthy and accepts the next normal push-to-talk request.
+7. Trigger a real human-detection alarm and run one M2 text-boundary check to
+   ensure those existing paths still work.
+
+Record the observed transport as: **Watcher stock push-to-talk → authenticated
+bounded binary upload → multipart JSON + WAV test response → Watcher display and
+speaker**. Mark this section hardware-UAT passed only after attaching the
+secret-free device/host/revision/result evidence. It is currently implemented
+and locally testable, not hardware-UAT passed.
+
 ## UAT result template
 
 ```markdown

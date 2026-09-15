@@ -5,6 +5,28 @@ contract implemented and fake-boundary verified; live edge→Core UAT remains pe
 
 This document describes the boundary between `teacher-edge` and `Lilian0414/teacher`.
 
+## M3.0 implemented stock Watcher push-to-talk compatibility
+
+`POST /v2/watcher/talk/audio_stream` is a **transport-only compatibility
+endpoint**. It accepts a non-empty binary Watcher upload (`application/octet-stream`
+or WAV), authenticates the existing bare-token or Bearer credential, and applies
+the existing device allowlist. The device EUI may be supplied as the stock
+`deviceEui` query parameter or `X-Device-Eui` header; `device_eui` and `deviceSn`
+query spellings are also tolerated for deployed clients.
+
+Uploads are buffered only up to `TEACHER_EDGE_WATCHER_AUDIO_MAX_BYTES` (default
+2,000,000 bytes). Declared or streamed over-limit bodies return `413`; empty,
+invalid-length, and disconnected bodies return a bounded 4xx response. Unsupported
+media types return `415`.
+
+A successful response is `multipart/mixed` using the fixed
+`teacher-edge-watcher-audio` boundary. It contains, in order, a compact JSON
+status/display part and a deterministic 16-kHz, mono, 16-bit PCM WAV test tone.
+Every part uses CRLF separators and a `Content-Length`, and the final boundary is
+closed. This endpoint does not call STT, Teacher Core, conversation logic, or a
+TTS provider; its response proves only stock firmware upload/JSON/audio framing.
+The M1 alarm endpoint and M2 text endpoint are unchanged.
+
 ## 0. Implemented Watcher ingress contract
 
 M1 implements the device-facing boundary only:
