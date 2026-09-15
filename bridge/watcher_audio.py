@@ -82,8 +82,8 @@ def framed_test_response() -> bytes:
             "data": {
                 "stt_result": TEST_MESSAGE,
                 "screen_text": TEST_MESSAGE,
-                "mode": "text",
-                "duration": 0.15,
+                "mode": 0,
+                "duration": 150,
             },
         },
         separators=(",", ":"),

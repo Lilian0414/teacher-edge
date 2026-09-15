@@ -268,7 +268,8 @@ not be reported as a Teacher voice conversation, STT, or provider-backed TTS tes
    matches the complete body, and the bytes are compact JSON followed immediately
    by the literal `---sensecraftboundary---\n` and WAV audio. Confirm the Watcher
    uses `data.screen_text` to display `Teacher Edge audio transport test` and
-   plays the short deterministic tone exactly once.
+   receives integer `data.mode: 0` and `data.duration: 150`, then plays the
+   150-millisecond deterministic tone exactly once.
 6. Repeat with an upload larger than the configured limit (lower the limit for a
    safe test) and confirm `413`; interrupt one upload and confirm the service
    stays healthy and accepts the next normal push-to-talk request.

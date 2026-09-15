@@ -40,16 +40,16 @@ def test_stock_audio_upload_returns_json_then_deterministic_wav() -> None:
     metadata_bytes, wav = response.content.split(RESPONSE_SEPARATOR, 1)
     assert metadata_bytes == (
         b'{"code":200,"data":{"stt_result":"Teacher Edge audio transport test",'
-        b'"screen_text":"Teacher Edge audio transport test","mode":"text",'
-        b'"duration":0.15}}'
+        b'"screen_text":"Teacher Edge audio transport test","mode":0,'
+        b'"duration":150}}'
     )
     assert json.loads(metadata_bytes) == {
         "code": 200,
         "data": {
             "stt_result": TEST_MESSAGE,
             "screen_text": TEST_MESSAGE,
-            "mode": "text",
-            "duration": 0.15,
+            "mode": 0,
+            "duration": 150,
         },
     }
     assert wav == deterministic_test_wav()
