@@ -50,3 +50,17 @@ class WatcherResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: Literal["healthy"] = "healthy"
+
+
+class TextRequest(BaseModel):
+    """Synthetic device text accepted by the edge transport boundary."""
+
+    request_id: str = Field(min_length=1)
+    device_eui: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    session_id: str | None = Field(default=None, min_length=1)
+
+
+class TextResponse(BaseModel):
+    conversation_id: str
+    assistant_text: str

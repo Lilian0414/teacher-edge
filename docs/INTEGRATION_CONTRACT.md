@@ -1,7 +1,7 @@
 # Teacher ↔ Edge Integration Contract
 
-Status: **deployment contract verified for the pinned Teacher revision; client
-payload schemas remain deferred to M2**.
+Status: **deployment contract verified for the pinned Teacher revision; M2 text client
+contract implemented and fake-boundary verified; live edge→Core UAT remains pending**.
 
 This document describes the boundary between `teacher-edge` and `Lilian0414/teacher`.
 
@@ -41,9 +41,9 @@ Later M2 endpoints: POST /v1/conversations
                     POST /v1/conversations/{conversation_id}/messages
 ```
 
-Payload schemas are intentionally not encoded here yet. Manual deployment UAT
-uses the pinned Core OpenAPI schema; M2 must document and contract-test exact
-request/response assumptions before adding a client.
+Manual deployment UAT uses the pinned Core OpenAPI schema. M2 now documents and
+contract-tests the exact request/response assumptions consumed by the edge client
+in section 12 below.
 
 ## 1. Ownership rule
 
@@ -226,3 +226,82 @@ Examples:
 - Teacher request timed out with unknown commit state → inspect / use idempotency semantics provided by Teacher before resending.
 
 Concrete retry rules should be implemented only after the exact Teacher API behavior is inspected.
+
+## 12. M2 implemented Teacher conversation contract
+
+Status: **implemented and verified locally against a fake HTTP boundary; live Teacher
+Core integration and hardware UAT remain pending**.
+
+Compatibility baseline:
+
+```text
+teacher-edge stacked base: PR #7 head 5eacb2413ee2af63635c4f5992f51f9c19c1cdeb
+Teacher repository: Lilian0414/teacher
+Teacher runtime: the immutable revision installed by the PR #7 deployment pin
+Network origin: http://127.0.0.1:8000 (fixed; non-loopback origins are rejected)
+```
+
+The adapter consumes exactly these two calls:
+
+### Create conversation
+
+```http
+POST /v1/conversations
+Content-Type: application/json
+
+{}
+```
+
+Successful responses may be any 2xx status and must contain a non-empty string
+conversation ID. Additional fields are ignored:
+
+```json
+{"id":"<teacher-conversation-id>"}
+```
+
+### Send conversation message
+
+```http
+POST /v1/conversations/{conversation_id}/messages
+Content-Type: application/json
+
+{"content":"<user text>"}
+```
+
+Successful generation responses may be any 2xx status and contain:
+
+```json
+{"ok":true,"assistant_message":{"content":"<assistant text>"},"retryable":false}
+```
+
+Generation failures are also valid 2xx responses. The user message may already be
+persisted by Teacher, so the edge preserves Teacher's authoritative retryability
+without replaying the request or exposing the provider error:
+
+```json
+{"ok":false,"assistant_message":null,"error":"<provider detail>","retryable":true}
+```
+
+Additional response fields, including user-message metadata, are ignored. The edge
+does not interpret either message, persist message history, or implement any
+Conversation, Memory, Learning, grading, scheduling, Review, or Proactive behavior.
+
+### Edge text transport
+
+Authenticated devices can exercise the synthetic round trip with
+`POST /v1/text`. Its JSON fields are `request_id`, `device_eui`, `text`, and the
+optional `session_id`. Explicit session IDs are namespaced by `device_eui`, so the
+same session string used by two devices cannot share a conversation. When omitted,
+`device_eui` is the session fallback. The response fields are `conversation_id` and
+`assistant_text`. A session ID maps transiently and in memory to a Teacher
+conversation ID; loss of the edge process only loses that transport mapping.
+
+Timeouts, connection errors, Teacher 5xx responses, and 2xx failure envelopes whose
+`retryable` field is true are classified as retryable and returned to the device as
+a sanitized 503. Teacher 4xx and malformed 2xx responses, plus failure envelopes
+whose `retryable` field is false, are non-retryable and become a sanitized 502. The
+edge does not automatically replay either POST because Teacher exposes no
+idempotency contract; a timeout may have occurred after Teacher committed the
+operation. Logs contain only endpoint paths, status codes, error classes, and
+retryability—not request or response bodies, authorization values, or provider
+errors.
