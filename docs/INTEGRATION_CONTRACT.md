@@ -1,7 +1,7 @@
 # Teacher ↔ Edge Integration Contract
 
 Status: **deployment contract verified for the pinned Teacher revision; M2 text client
-contract implemented and fake-boundary verified; live edge→Core UAT remains pending**.
+contract implemented and live edge→Core UAT passed; M3.0 stock Watcher transport/presentation hardware-UAT passed**.
 
 This document describes the boundary between `teacher-edge` and `Lilian0414/teacher`.
 
@@ -29,10 +29,12 @@ the total byte length of all three segments. The JSON returns `code: 200` and
 `data.duration: 2000` (milliseconds, matching the test WAV). Stock firmware
 presents `data.screen_text` during the audio response; the two-second test tone
 therefore provides an observable presentation interval (the former 150 ms tone
-was audible but too short for reliable visual UAT). This
-endpoint does not call STT, Teacher Core, conversation logic, or a
+was audible but too short for reliable visual UAT). This endpoint does not call STT, Teacher Core, conversation logic, or a
 TTS provider; its response proves only stock firmware upload/JSON/audio framing.
-The M1 alarm endpoint and M2 text endpoint are unchanged.
+On real hardware, PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31`
+was verified to return `200 OK`, present `Teacher Edge audio transport test`
+on the Watcher display, and play the deterministic two-second tone. The M1 alarm
+endpoint and M2 text endpoint are unchanged.
 
 ## 0. Implemented Watcher ingress contract
 
@@ -258,8 +260,7 @@ Concrete retry rules should be implemented only after the exact Teacher API beha
 
 ## 12. M2 implemented Teacher conversation contract
 
-Status: **implemented and verified locally against a fake HTTP boundary; live Teacher
-Core integration and hardware UAT remain pending**.
+Status: **implemented; live Raspberry Pi → Teacher Core text round-trip UAT passed**.
 
 Compatibility baseline:
 
