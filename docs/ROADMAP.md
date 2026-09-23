@@ -70,7 +70,7 @@ TeacherClient is included; that integration remains M2 work.
 
 ## M2 — Device bridge skeleton + text round-trip
 
-Status: **implemented and verified locally with a fake Teacher HTTP boundary; live Pi/Teacher verification pending**.
+Status: **implemented and live Pi/Teacher UAT passed**.
 
 Goal: prove the architecture before audio complexity.
 
@@ -96,6 +96,23 @@ Watcher or test client
 No duplicate learning logic exists in the bridge.
 
 ## M3 — Voice conversation MVP
+
+### M3.0 — Stock Watcher PTT transport compatibility
+
+Status: **hardware-UAT passed** on PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31`.
+
+Verified on real stock Watcher + Raspberry Pi:
+
+- Audio Task Composer is configured with the service base URL; stock firmware appends `/v2/watcher/talk/audio_stream`.
+- PTT upload reaches the authenticated edge endpoint and returns `200 OK`.
+- Stock response framing is accepted as compact JSON + `---sensecraftboundary---\n` + WAV.
+- Watcher displays `Teacher Edge audio transport test` while playing the deterministic 2-second tone.
+
+M3.0 is transport/presentation evidence only. It does not claim STT, Teacher conversation, or provider-backed TTS.
+
+### M3.1 — End-to-end Teacher voice conversation
+
+Status: **next implementation milestone / Issue #10**.
 
 Goal: complete one full voice conversation turn without the MacBook.
 
