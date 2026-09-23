@@ -1,0 +1,24 @@
+[Unit]
+Description=Teacher Core localhost API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@SERVICE_USER@
+Group=@SERVICE_GROUP@
+WorkingDirectory=@TEACHER_REPOSITORY_PATH@
+EnvironmentFile=/etc/teacher/teacher.env
+ExecStartPre=@TEACHER_REPOSITORY_PATH@/.venv/bin/alembic upgrade head
+ExecStart=@TEACHER_REPOSITORY_PATH@/.venv/bin/companion-core
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=read-only
+ProtectSystem=strict
+ReadWritePaths=/var/lib/teacher
+
+[Install]
+WantedBy=multi-user.target

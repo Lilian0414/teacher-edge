@@ -1,7 +1,8 @@
 # Target Architecture
 
-Status: **partially implemented**. The Watcher → Pi HTTP ingress is implemented;
-Teacher integration, audio, and outbound Watcher delivery remain proposed.
+Status: **partially implemented**. The Watcher → Pi HTTP ingress and pinned
+Teacher Core Pi service are implemented and hardware-verified; edge-to-Teacher
+integration, audio, and outbound Watcher delivery remain pending.
 
 This document defines the intended system boundary before implementation begins.
 
@@ -138,7 +139,9 @@ Teacher Core
 This preserves Teacher's existing localhost-oriented trust boundary and avoids exposing the full learning API directly to every LAN client.
 
 The M1 HTTP ingress uses an environment-configured shared token and optional
-device-EUI allowlist. A pairing mechanism remains a deferred decision.
+device-EUI allowlist. A pairing mechanism remains a deferred decision. The M1.2
+deployment pins Teacher commit `c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5`,
+binds Core to `127.0.0.1:8000`, and stores SQLite under `/var/lib/teacher`.
 
 ## 5. State ownership
 

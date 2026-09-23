@@ -1,7 +1,7 @@
 # Hardware UAT
 
-Status: **M1 Watcher-to-Pi ingress hardware UAT passed before the systemd
-deployment; reboot/systemd UAT remains pending**.
+Status: **M1.1 Watcher-to-Pi ingress and edge reboot/systemd hardware UAT
+passed; M1.2 Teacher Core deployment hardware UAT passed**.
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge
@@ -9,11 +9,17 @@ authenticated it, and returned `200 OK`. No shared-token value or Authorization
 header is retained here. The verified teacher-edge M1 main revision was
 `77904412bbbfb21f72a63d951163201da79c94b8`; the sanitized observed path was
 **real human detection → authenticated `POST /v1/notification/event` → `200
-OK`**. This evidence establishes the M1 transport/auth path; it does not
-establish that the newly added systemd service survives reboot. The original
-evidence did not include enough other sanitized hardware/software revision
-detail to reconstruct the environment, so those details remain an explicit
-limitation and must be captured during reboot UAT.
+OK`**.
+
+The M1.1 systemd path was subsequently verified on a real Raspberry Pi at
+teacher-edge main revision `a5dc33140c15ced0a6e66ff3817f49a8fef7bbcc` (PR #5
+merge commit). After reboot, `teacher-edge` was observed as both `enabled` and
+`active`, and `/health` succeeded. The real Watcher remained powered on with
+its `http alarm` taskflow unchanged; another real human detection traversed the
+authenticated `POST /v1/notification/event` ingress and returned `200 OK`.
+Device model, OS, firmware, network topology, and test time were not included
+in the supplied sanitized result, so they remain evidence limitations rather
+than being inferred here.
 
 The M1.1 reboot procedure covers Pi reboot persistence only. The Watcher must
 remain powered on and configured with the `http alarm` runtime taskflow during
@@ -21,8 +27,28 @@ that test. Rebooting the Watcher currently resets the runtime taskflow to
 `sensecraft alarm`; persistent Watcher provisioning is a known limitation and
 is outside the M1.1 scope.
 
-For the repeatable systemd reboot procedure and required evidence, see
-[`DEPLOYMENT.md`](DEPLOYMENT.md#reboot-uat-must-run-on-the-real-pi).
+For the repeatable systemd reboot procedure and evidence requirements, see
+[`DEPLOYMENT.md`](DEPLOYMENT.md#edge-reboot-uat-hardware-passed-reusable-procedure).
+
+The M1.2 Teacher Core deployment was hardware-verified on a real Raspberry Pi
+using Python 3.13.5 and Teacher revision
+`c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5`. The installer completed
+successfully, and `teacher-core` was observed as `enabled` and `active`.
+`GET http://127.0.0.1:8000/health` returned healthy JSON, while the port 8000
+listener was bound to `127.0.0.1:8000` and not `0.0.0.0:8000`.
+
+Direct Core UAT created a conversation with `POST /v1/conversations`, then
+`POST /v1/conversations/{id}/messages` returned `ok: true` with a real assistant
+response through Groq. After a Pi reboot, that conversation and both messages
+remained retrievable, demonstrating SQLite persistence; `teacher-core` also
+auto-started and remained healthy. Finally, after
+`sudo systemctl kill -s SIGKILL teacher-core`, the service and health endpoint
+recovered, verifying `Restart=on-failure`. No provider key or other secret is
+recorded here.
+
+This was direct Teacher Core UAT. M2 edge-to-Teacher client integration remains
+unimplemented, so these results do not demonstrate an edge-mediated Teacher
+conversation turn.
 
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 

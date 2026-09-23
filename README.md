@@ -97,13 +97,13 @@ teacher-edge/
 
 ## Current status
 
-目前為 **Watcher HTTP ingress implemented / hardware-UAT passed** 階段。
+目前為 **Watcher ingress 與 Teacher Core Pi deployment hardware-UAT passed** 階段。
 
 - Teacher Core：既有專案，另 repo 維護
-- Raspberry Pi host：FastAPI ingress runtime 與 systemd deployment 已實作；reboot UAT 尚待實機執行
+- Raspberry Pi host：FastAPI ingress 的 systemd reboot UAT 已於實機通過；pinned Teacher Core systemd deployment 的安裝、reboot、provider、SQLite persistence、localhost-only binding 與 failure recovery UAT 亦已在實機通過
 - Watcher integration：`POST /v1/notification/event` ingress 已實作；Teacher adapter、audio 與 outbound rendering 尚未實作
 - ElevenLabs TTS：已選為目標 provider，尚未在本 repo 串接
-- Hardware UAT：M1 bridge revision 的 Watcher → Pi transport/auth path 已於實機通過；systemd 的 Pi reboot persistence UAT 尚待執行
+- Hardware UAT：M1.1 revision `a5dc33140c15ced0a6e66ff3817f49a8fef7bbcc` 已在真實 Pi reboot 後保持 `enabled`、`active` 與 `/health` healthy，並由保持上電且維持 `http alarm` 的真實 Watcher 再次完成 human detection → authenticated ingress → `200 OK`。M1.2 已在 Python 3.13.5 的真實 Pi 以 Teacher revision `c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5` 通過 Core install、service/health、Groq direct conversation、reboot persistence、localhost-only listener 與 `Restart=on-failure` recovery UAT；M2 edge→Teacher client 仍未實作
 
 詳見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)、[`docs/INTEGRATION_CONTRACT.md`](docs/INTEGRATION_CONTRACT.md)、[`docs/ROADMAP.md`](docs/ROADMAP.md) 與 [`docs/UAT.md`](docs/UAT.md)。
 
