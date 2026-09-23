@@ -11,6 +11,7 @@ from starlette.requests import ClientDisconnect
 
 RESPONSE_SEPARATOR = b"---sensecraftboundary---\n"
 TEST_MESSAGE = "Teacher Edge audio transport test"
+TEST_AUDIO_DURATION_MS = 2_000
 
 
 async def read_bounded_audio(request: Request, maximum_bytes: int) -> bytes:
@@ -52,7 +53,9 @@ def deterministic_test_wav() -> bytes:
     """Return a short, reproducible 16-kHz mono PCM tone; no provider is contacted."""
 
     sample_rate = 16_000
-    sample_count = 2_400  # 150 ms
+    # Stock firmware presents ``screen_text`` while the response audio is active.
+    # Keep the transport tone long enough for that presentation to be visible.
+    sample_count = sample_rate * TEST_AUDIO_DURATION_MS // 1_000
     samples = bytearray()
     for index in range(sample_count):
         # Fade the 440-Hz tone to avoid clicks on the Watcher speaker.
@@ -83,7 +86,7 @@ def framed_test_response() -> bytes:
                 "stt_result": TEST_MESSAGE,
                 "screen_text": TEST_MESSAGE,
                 "mode": 0,
-                "duration": 150,
+                "duration": TEST_AUDIO_DURATION_MS,
             },
         },
         separators=(",", ":"),

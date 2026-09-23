@@ -26,7 +26,10 @@ bytes, the literal `---sensecraftboundary---\n` separator, and a deterministic
 16-kHz, mono, 16-bit PCM WAV test tone, in that order. Its `Content-Length` is
 the total byte length of all three segments. The JSON returns `code: 200` and
 `data.stt_result`, `data.screen_text`, integer `data.mode: 0` (chat), and integer
-`data.duration: 150` (milliseconds, matching the test WAV). This
+`data.duration: 2000` (milliseconds, matching the test WAV). Stock firmware
+presents `data.screen_text` during the audio response; the two-second test tone
+therefore provides an observable presentation interval (the former 150 ms tone
+was audible but too short for reliable visual UAT). This
 endpoint does not call STT, Teacher Core, conversation logic, or a
 TTS provider; its response proves only stock firmware upload/JSON/audio framing.
 The M1 alarm endpoint and M2 text endpoint are unchanged.

@@ -8,6 +8,7 @@ from bridge.app import create_app
 from bridge.config import Settings
 from bridge.watcher_audio import (
     RESPONSE_SEPARATOR,
+    TEST_AUDIO_DURATION_MS,
     TEST_MESSAGE,
     deterministic_test_wav,
 )
@@ -41,7 +42,7 @@ def test_stock_audio_upload_returns_json_then_deterministic_wav() -> None:
     assert metadata_bytes == (
         b'{"code":200,"data":{"stt_result":"Teacher Edge audio transport test",'
         b'"screen_text":"Teacher Edge audio transport test","mode":0,'
-        b'"duration":150}}'
+        b'"duration":2000}}'
     )
     assert json.loads(metadata_bytes) == {
         "code": 200,
@@ -49,11 +50,20 @@ def test_stock_audio_upload_returns_json_then_deterministic_wav() -> None:
             "stt_result": TEST_MESSAGE,
             "screen_text": TEST_MESSAGE,
             "mode": 0,
-            "duration": 150,
+            "duration": TEST_AUDIO_DURATION_MS,
         },
     }
     assert wav == deterministic_test_wav()
-    assert wav[:12] == b"RIFF" + struct.pack("<I", 4836) + b"WAVE"
+    assert wav[:12] == b"RIFF" + struct.pack("<I", 64036) + b"WAVE"
+    assert len(wav) == 64_044
+
+
+def test_test_audio_duration_matches_presentation_metadata() -> None:
+    wav = deterministic_test_wav()
+    sample_rate = struct.unpack_from("<I", wav, 24)[0]
+    data_bytes = struct.unpack_from("<I", wav, 40)[0]
+    duration_ms = data_bytes * 1_000 // (sample_rate * 2)
+    assert duration_ms == TEST_AUDIO_DURATION_MS
 
 
 def test_stock_headers_authenticate_device_identity() -> None:
