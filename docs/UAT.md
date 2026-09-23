@@ -1,7 +1,8 @@
 # Hardware UAT
 
-Status: **M1.1 Watcher-to-Pi ingress and edge reboot/systemd hardware UAT
-passed; M1.2 Teacher Core deployment hardware UAT passed**.
+Status: **M1.1 Watcher-to-Pi ingress passed; M1.2 Teacher Core deployment passed;
+M2 live edge→Teacher text round-trip passed; M3.0 stock Watcher PTT
+transport/presentation hardware UAT passed**.
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge
@@ -46,9 +47,10 @@ auto-started and remained healthy. Finally, after
 recovered, verifying `Restart=on-failure`. No provider key or other secret is
 recorded here.
 
-This was direct Teacher Core UAT. M2 edge-to-Teacher client integration remains
-unimplemented, so these results do not demonstrate an edge-mediated Teacher
-conversation turn.
+This was direct Teacher Core UAT. M2 was subsequently implemented and verified
+through the live edge service on the same Pi: two text turns traversed
+teacher-edge → Teacher Core → assistant response, and the explicit device/session
+mapping reused the same Teacher conversation as intended.
 
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 
@@ -246,7 +248,7 @@ Record:
 
 Increase the duration only after the basic 24-hour run is stable.
 
-## M3.0 stock Watcher push-to-talk transport UAT (hardware-UAT partial)
+## M3.0 stock Watcher push-to-talk transport UAT (hardware-UAT passed)
 
 This procedure verifies only the compatibility transport added in M3.0. It must
 not be reported as a Teacher voice conversation, STT, or provider-backed TTS test.
@@ -279,13 +281,20 @@ not be reported as a Teacher voice conversation, STT, or provider-backed TTS tes
 
 Record the observed transport as: **Watcher stock push-to-talk → authenticated
 bounded binary upload → raw JSON + stock separator + WAV test response → Watcher display and
-speaker**. Mark this section hardware-UAT passed only after attaching the
-secret-free device/host/revision/result evidence. It is currently implemented
-and locally testable. Hardware UAT on 2026-09-24 against
-`e4333fcb1b87f3bace9c7f664c1f5e90f34835c8` verified the base-URL request path,
-`200 OK`, and tone playback, but not visible text presentation. That result is
-**partial**, not hardware-UAT passed; visible presentation and the regression
-checks above must be repeated with the candidate SHA.
+speaker**.
+
+Hardware UAT on 2026-09-24 first verified the base-URL request path, `200 OK`,
+and tone playback on the earlier 150 ms candidate, but visible text could not be
+confirmed. PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31` extended the
+deterministic response interval to 2 seconds. Re-test on the real stock Watcher
+confirmed all core M3.0 acceptance observations: the request reached
+`/v2/watcher/talk/audio_stream`, returned `200 OK`, the Watcher played the
+approximately two-second tone, and the display visibly presented
+`Teacher Edge audio transport test`.
+
+Therefore the stock Watcher transport/presentation portion of M3.0 is
+**hardware-UAT passed**. This does not claim STT, Teacher conversation processing,
+or provider-backed TTS; those remain M3.1 / Issue #10 scope.
 
 ## UAT result template
 
