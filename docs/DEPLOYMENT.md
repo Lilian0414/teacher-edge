@@ -1,8 +1,6 @@
 # Raspberry Pi systemd deployment
 
-The tracked unit runs only the implemented Watcher ingress. It exposes the
-bridge on `0.0.0.0:8834`; it does not expose or call Teacher Core. A future
-Teacher adapter must continue to reach Teacher Core through a localhost URL.
+The tracked edge unit exposes the bridge on `0.0.0.0:8834` for authenticated Watcher notification, synthetic text and stock PTT transport. The M2 text adapter calls the pinned Teacher Core over localhost; the M3.0 PTT endpoint returns a deterministic test response and does not yet send audio through Teacher STT or conversation. See [STATUS](STATUS.md) for the current milestone boundary and [INTEGRATION_CONTRACT](INTEGRATION_CONTRACT.md) for endpoint contracts.
 
 ## Teacher Core baseline (pinned upstream)
 
@@ -50,8 +48,7 @@ reinstall, and never printed. The template keeps embeddings disabled and uses
 The unit runs `alembic upgrade head` with the configured environment before
 every start, making initial migration and upgrades repeatable, then starts
 `companion-core`. It binds to `127.0.0.1:8000`, restarts on failure, and starts
-at boot when enabled. Do not expose Core to the LAN; a future M2 bridge client
-will call it over localhost.
+at boot when enabled. Do not expose Core to the LAN; the implemented M2 text bridge client calls it over localhost.
 
 ### Operate, update, and remove Teacher Core
 
@@ -97,8 +94,7 @@ Expected results are an active unit, successful health response, localhost-only
 listener, durable database after reboot, and one persisted real conversation
 turn. These results passed on real Pi hardware for M1.2; see
 [`UAT.md`](UAT.md) for the sanitized evidence. Keep this procedure for
-verification of later revisions. It exercises Core directly and does not imply
-that the M2 edge-to-Teacher client exists.
+verification of later revisions. This procedure exercises Core directly; the M2 edge-to-Teacher round-trip is separately recorded in [UAT.md](UAT.md).
 
 ## Install
 
