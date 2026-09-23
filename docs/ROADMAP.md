@@ -70,6 +70,8 @@ TeacherClient is included; that integration remains M2 work.
 
 ## M2 — Device bridge skeleton + text round-trip
 
+Status: **implemented and verified locally with a fake Teacher HTTP boundary; live Pi/Teacher verification pending**.
+
 Goal: prove the architecture before audio complexity.
 
 Scope:
