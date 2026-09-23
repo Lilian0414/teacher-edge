@@ -1,7 +1,8 @@
 # Hardware UAT
 
-Status: **M1.1 Watcher-to-Pi ingress and edge reboot/systemd hardware UAT
-passed; M1.2 Teacher Core deployment hardware UAT passed**.
+Status: **M1.1 Watcher-to-Pi ingress passed; M1.2 Teacher Core deployment passed;
+M2 live edge→Teacher text round-trip passed; M3.0 stock Watcher PTT
+transport/presentation hardware UAT passed**.
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge
@@ -46,9 +47,10 @@ auto-started and remained healthy. Finally, after
 recovered, verifying `Restart=on-failure`. No provider key or other secret is
 recorded here.
 
-This was direct Teacher Core UAT. M2 edge-to-Teacher client integration remains
-unimplemented, so these results do not demonstrate an edge-mediated Teacher
-conversation turn.
+This was direct Teacher Core UAT. M2 was subsequently implemented and verified
+through the live edge service on the same Pi: two text turns traversed
+teacher-edge → Teacher Core → assistant response, and the explicit device/session
+mapping reused the same Teacher conversation as intended.
 
 This document defines the evidence required before claiming that a Teacher Edge milestone works on real hardware.
 
@@ -245,6 +247,54 @@ Record:
 - session recovery behavior
 
 Increase the duration only after the basic 24-hour run is stable.
+
+## M3.0 stock Watcher push-to-talk transport UAT (hardware-UAT passed)
+
+This procedure verifies only the compatibility transport added in M3.0. It must
+not be reported as a Teacher voice conversation, STT, or provider-backed TTS test.
+
+1. Deploy the exact candidate teacher-edge SHA on the Pi and record the evidence
+   header above, including Watcher model and stock firmware version.
+2. Configure the same generated shared token and allowlisted EUI on the Pi and
+   Watcher without recording either value in the UAT artifact.
+   Confirm the request carries `Authorization`, `API-OBITER-DEVICE-EUI`,
+   `Session-Id`, and `Content-Type: application/octet-stream` headers (record
+   header names only, never their secret values).
+3. Configure Audio Task Composer with the service **base URL only**,
+   `http://<pi-lan-address>:<port>`, and retain the existing HTTP-alarm taskflow
+   configuration. Stock firmware appends `/v2/watcher/talk/audio_stream`; do not
+   include that path in the configured URL or it will be appended twice.
+4. With the MacBook absent from the runtime path, press and hold talk, speak a
+   short phrase, and release. Record a sanitized Pi log showing the endpoint and
+   HTTP status, but not request audio or authorization headers.
+5. Confirm the response is `application/octet-stream`, its `Content-Length`
+   matches the complete body, and the bytes are compact JSON followed immediately
+   by the literal `---sensecraftboundary---\n` and WAV audio. Confirm the Watcher
+   uses `data.screen_text` to display `Teacher Edge audio transport test` and
+   receives integer `data.mode: 0` and `data.duration: 2000`, then presents the
+   text while playing the two-second deterministic tone exactly once.
+6. Repeat with an upload larger than the configured limit (lower the limit for a
+   safe test) and confirm `413`; interrupt one upload and confirm the service
+   stays healthy and accepts the next normal push-to-talk request.
+7. Trigger a real human-detection alarm and run one M2 text-boundary check to
+   ensure those existing paths still work.
+
+Record the observed transport as: **Watcher stock push-to-talk → authenticated
+bounded binary upload → raw JSON + stock separator + WAV test response → Watcher display and
+speaker**.
+
+Hardware UAT on 2026-09-24 first verified the base-URL request path, `200 OK`,
+and tone playback on the earlier 150 ms candidate, but visible text could not be
+confirmed. PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31` extended the
+deterministic response interval to 2 seconds. Re-test on the real stock Watcher
+confirmed all core M3.0 acceptance observations: the request reached
+`/v2/watcher/talk/audio_stream`, returned `200 OK`, the Watcher played the
+approximately two-second tone, and the display visibly presented
+`Teacher Edge audio transport test`.
+
+Therefore the stock Watcher transport/presentation portion of M3.0 is
+**hardware-UAT passed**. This does not claim STT, Teacher conversation processing,
+or provider-backed TTS; those remain M3.1 / Issue #10 scope.
 
 ## UAT result template
 

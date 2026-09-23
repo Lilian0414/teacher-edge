@@ -2,7 +2,8 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Query, Request
+from fastapi.responses import Response
 
 from bridge.config import Settings
 from bridge.events import EventHandler, log_event, normalize_event
@@ -16,6 +17,10 @@ from bridge.models import (
 from bridge.security import authorize_device
 from bridge.sessions import ConversationSessions
 from bridge.teacher_client import TeacherClient, TeacherClientError
+from bridge.watcher_audio import (
+    framed_test_response,
+    read_bounded_audio,
+)
 
 
 def create_app(
@@ -66,10 +71,49 @@ def create_app(
             status = 503 if exc.retryable else 502
             raise HTTPException(
                 status_code=status,
-                detail={"error": "teacher_core_unavailable", "retryable": exc.retryable},
+                detail={
+                    "error": "teacher_core_unavailable",
+                    "retryable": exc.retryable,
+                },
             ) from exc
         return TextResponse(
             conversation_id=conversation_id, assistant_text=assistant_text
+        )
+
+    @app.post("/v2/watcher/talk/audio_stream")
+    async def watcher_audio_stream(
+        request: Request,
+        device_eui: str | None = Query(default=None, alias="deviceEui"),
+        authorization: str | None = Header(default=None),
+        stock_device_eui: str | None = Header(
+            default=None, alias="API-OBITER-DEVICE-EUI"
+        ),
+        x_device_eui: str | None = Header(default=None),
+    ) -> Response:
+        """Accept one stock Watcher upload and return a transport-only test response."""
+
+        device_id = (
+            stock_device_eui
+            or device_eui
+            or request.query_params.get("device_eui")
+            or request.query_params.get("deviceSn")
+            or x_device_eui
+            or ""
+        )
+        authorize_device(authorization, device_id, runtime_settings)
+        content_type = request.headers.get("content-type", "").split(";", 1)[0].lower()
+        if content_type not in {"application/octet-stream", "audio/wav", "audio/x-wav"}:
+            raise HTTPException(
+                status_code=415, detail="Unsupported audio content type"
+            )
+        # Parsing is deliberately completed before response headers are sent. No STT,
+        # conversation, or TTS provider is part of this compatibility increment.
+        await read_bounded_audio(request, runtime_settings.watcher_audio_max_bytes)
+        body = framed_test_response()
+        return Response(
+            content=body,
+            media_type="application/octet-stream",
+            headers={"Content-Length": str(len(body))},
         )
 
     return app

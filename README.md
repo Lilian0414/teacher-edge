@@ -97,13 +97,14 @@ teacher-edge/
 
 ## Current status
 
-目前為 **Watcher ingress 與 Teacher Core Pi deployment hardware-UAT passed** 階段。
+目前已完成 **Watcher ingress、Teacher Core Pi deployment、M2 edge→Teacher text round-trip，以及 M3.0 stock Watcher PTT transport/presentation 的實機驗收**。下一個未完成里程碑是 M3.1 完整語音閉環。
 
 - Teacher Core：既有專案，另 repo 維護
 - Raspberry Pi host：FastAPI ingress 的 systemd reboot UAT 已於實機通過；pinned Teacher Core systemd deployment 的安裝、reboot、provider、SQLite persistence、localhost-only binding 與 failure recovery UAT 亦已在實機通過
-- Watcher integration：`POST /v1/notification/event` ingress 已實作；Teacher adapter、audio 與 outbound rendering 尚未實作
-- ElevenLabs TTS：已選為目標 provider，尚未在本 repo 串接
-- Hardware UAT：M1.1 revision `a5dc33140c15ced0a6e66ff3817f49a8fef7bbcc` 已在真實 Pi reboot 後保持 `enabled`、`active` 與 `/health` healthy，並由保持上電且維持 `http alarm` 的真實 Watcher 再次完成 human detection → authenticated ingress → `200 OK`。M1.2 已在 Python 3.13.5 的真實 Pi 以 Teacher revision `c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5` 通過 Core install、service/health、Groq direct conversation、reboot persistence、localhost-only listener 與 `Restart=on-failure` recovery UAT；M2 edge→Teacher client 仍未實作
+- Watcher integration：`POST /v1/notification/event` ingress 已實作；M2 `POST /v1/text` 已透過真實 Pi 上的 Teacher Core 完成兩輪 conversation/session reuse 驗收；M3.0 `POST /v2/watcher/talk/audio_stream` 已由 stock Watcher 真機驗證 upload、200 response、`screen_text` 顯示與 WAV 播放
+- ElevenLabs TTS：已選為 M3.1 目標 provider；M3.0 僅使用 deterministic WAV 驗證 stock transport/presentation，尚未把 provider TTS 接入 Watcher voice round-trip
+- Hardware UAT：M1.1 已驗證 reboot 後 ingress 與 real human-detection alarm；M1.2 已驗證 pinned Teacher Core install、health、Groq direct conversation、SQLite reboot persistence、localhost-only listener 與 failure recovery；M2 已驗證 edge → Teacher Core → assistant text 的 live Pi round-trip；M3.0 已在 PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31` 驗證 stock Watcher PTT → authenticated audio upload → `200 OK` → 2 秒 deterministic tone + `Teacher Edge audio transport test` 畫面顯示
+- Next：Issue #10 / M3.1 才會接上 Teacher STT、Teacher conversation、ElevenLabs TTS，形成真正的 Watcher 語音 Teacher round-trip
 
 詳見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)、[`docs/INTEGRATION_CONTRACT.md`](docs/INTEGRATION_CONTRACT.md)、[`docs/ROADMAP.md`](docs/ROADMAP.md) 與 [`docs/UAT.md`](docs/UAT.md)。
 

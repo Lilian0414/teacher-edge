@@ -12,6 +12,7 @@ class Settings:
     allowed_device_euis: frozenset[str]
     teacher_core_url: str = "http://127.0.0.1:8000"
     teacher_timeout_seconds: float = 15.0
+    watcher_audio_max_bytes: int = 2_000_000
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -21,10 +22,11 @@ class Settings:
             allowed_device_euis=frozenset(
                 value.strip() for value in device_euis.split(",") if value.strip()
             ),
-            teacher_core_url=os.getenv(
-                "TEACHER_CORE_URL", "http://127.0.0.1:8000"
-            ),
+            teacher_core_url=os.getenv("TEACHER_CORE_URL", "http://127.0.0.1:8000"),
             teacher_timeout_seconds=float(
                 os.getenv("TEACHER_CORE_TIMEOUT_SECONDS", "15")
+            ),
+            watcher_audio_max_bytes=int(
+                os.getenv("TEACHER_EDGE_WATCHER_AUDIO_MAX_BYTES", "2000000")
             ),
         )
