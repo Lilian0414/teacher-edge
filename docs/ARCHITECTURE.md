@@ -1,10 +1,6 @@
 # Target Architecture
 
-Status: **partially implemented**. The Watcher → Pi HTTP ingress and pinned
-Teacher Core Pi service are implemented and hardware-verified; edge-to-Teacher
-integration, audio, and outbound Watcher delivery remain pending.
-
-This document defines the intended system boundary before implementation begins.
+This document owns roles, runtime placement, data flow and state ownership. For verified implementation status see [STATUS](STATUS.md); future work belongs in [ROADMAP](ROADMAP.md). The diagrams below show the **target topology**, including components that M3.1 has not implemented.
 
 ## 1. System roles
 
@@ -188,16 +184,6 @@ Watcher / Edge ──┘
 
 This prevents hardware experiments from contaminating Teacher's learning-domain implementation and makes it possible to replace the Watcher later without renaming or rewriting the learning engine.
 
-## 8. Deferred architecture decisions
+## 8. Open architecture decisions
 
-Do not lock these choices before the hardware spike provides evidence:
-
-- custom firmware vs extending an existing Watcher firmware stack
-- HTTP vs WebSocket vs another persistent transport between Watcher and Pi
-- push-to-talk vs wake word for the first usable product
-- exact audio codec / chunking strategy
-- exact device authentication / pairing mechanism
-- whether local Ollama embedding latency on Pi is acceptable for normal use
-- whether TTS should stream or return a complete audio object for MVP
-
-Each decision should be recorded after a spike or implementation issue produces evidence.
+Stock Watcher firmware, HTTP ingress, PTT upload and deterministic response framing were validated in M3.0; see [INTEGRATION_CONTRACT](INTEGRATION_CONTRACT.md) and [UAT](UAT.md). Decisions still requiring evidence include device pairing, Pi embedding runtime viability, and provider-backed TTS streaming / buffering for M3.1. The completed and pending milestone boundary is maintained only in [STATUS](STATUS.md).

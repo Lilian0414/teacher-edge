@@ -79,11 +79,11 @@ Watcher speaker + display
 ```text
 teacher-edge/
 ├── bridge/                 # Raspberry Pi device gateway / Teacher adapter
-├── watcher/                # Watcher-side firmware or client integration
 ├── deploy/
 │   └── raspberry-pi/       # systemd / install / config
 ├── tests/
 ├── docs/
+│   ├── STATUS.md
 │   ├── ARCHITECTURE.md
 │   ├── HARDWARE.md
 │   ├── INTEGRATION_CONTRACT.md
@@ -93,22 +93,15 @@ teacher-edge/
 └── README.md
 ```
 
-`bridge/` 的 Watcher HTTP ingress 與其 focused tests 已實作；其餘目錄仍是 target layout。
+此處為目前 repository 目錄；未實作的 device feature 以 [ROADMAP](docs/ROADMAP.md) 為準。
 
 ## Current status
 
-目前已完成 **Watcher ingress、Teacher Core Pi deployment、M2 edge→Teacher text round-trip，以及 M3.0 stock Watcher PTT transport/presentation 的實機驗收**。下一個未完成里程碑是 M3.1 完整語音閉環。
+M1.1、M1.2、M2 與 M3.0 已分階段通過實機驗收；完整 provider-backed Watcher 語音對話為下一階段 M3.1。最新里程碑、測試 SHA 與明確邊界只維護在 [`docs/STATUS.md`](docs/STATUS.md)。
 
-- Teacher Core：既有專案，另 repo 維護
-- Raspberry Pi host：FastAPI ingress 的 systemd reboot UAT 已於實機通過；pinned Teacher Core systemd deployment 的安裝、reboot、provider、SQLite persistence、localhost-only binding 與 failure recovery UAT 亦已在實機通過
-- Watcher integration：`POST /v1/notification/event` ingress 已實作；M2 `POST /v1/text` 已透過真實 Pi 上的 Teacher Core 完成兩輪 conversation/session reuse 驗收；M3.0 `POST /v2/watcher/talk/audio_stream` 已由 stock Watcher 真機驗證 upload、200 response、`screen_text` 顯示與 WAV 播放
-- ElevenLabs TTS：已選為 M3.1 目標 provider；M3.0 僅使用 deterministic WAV 驗證 stock transport/presentation，尚未把 provider TTS 接入 Watcher voice round-trip
-- Hardware UAT：M1.1 已驗證 reboot 後 ingress 與 real human-detection alarm；M1.2 已驗證 pinned Teacher Core install、health、Groq direct conversation、SQLite reboot persistence、localhost-only listener 與 failure recovery；M2 已驗證 edge → Teacher Core → assistant text 的 live Pi round-trip；M3.0 已在 PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31` 驗證 stock Watcher PTT → authenticated audio upload → `200 OK` → 2 秒 deterministic tone + `Teacher Edge audio transport test` 畫面顯示
-- Next：Issue #10 / M3.1 才會接上 Teacher STT、Teacher conversation、ElevenLabs TTS，形成真正的 Watcher 語音 Teacher round-trip
+架構、協定、部署、可重複 UAT 與後續工作分別見 [ARCHITECTURE](docs/ARCHITECTURE.md)、[INTEGRATION_CONTRACT](docs/INTEGRATION_CONTRACT.md)、[DEPLOYMENT](docs/DEPLOYMENT.md)、[UAT](docs/UAT.md) 與 [ROADMAP](docs/ROADMAP.md)。
 
-詳見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)、[`docs/INTEGRATION_CONTRACT.md`](docs/INTEGRATION_CONTRACT.md)、[`docs/ROADMAP.md`](docs/ROADMAP.md) 與 [`docs/UAT.md`](docs/UAT.md)。
-
-## Run the M1 ingress on Raspberry Pi
+## Run the notification ingress on Raspberry Pi
 
 Python 3.11+ is required. Keep real values in the Pi environment (or an untracked
 `.env` consumed by the service manager):
@@ -139,9 +132,7 @@ curl -X POST http://PI_LAN_IP:8834/v1/notification/event \
   -d '{"requestId":"example-request","deviceEui":"<watcher-device-eui>","events":{"timestamp":1788983266392,"text":"human detected","data":{"inference":{"boxes":[[145,262,240,308,83,0]],"classes_name":["person"]}}}}'
 ```
 
-The bridge only validates, normalizes, and logs non-secret event metadata in M1,
-then acknowledges a successful notification with `{"code":200}`. It does not call
-Teacher Core, persist events, or send an outbound rendered response to the Watcher.
+**This notification endpoint** validates and normalizes event metadata, then acknowledges with `{"code":200}`. It does not call Teacher Core or render a response. Other endpoints have separate behavior in [INTEGRATION_CONTRACT](docs/INTEGRATION_CONTRACT.md).
 
 For reboot-safe Raspberry Pi installation and operational commands, see
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).

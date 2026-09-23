@@ -1,8 +1,8 @@
 # Hardware UAT
 
-Status: **M1.1 Watcher-to-Pi ingress passed; M1.2 Teacher Core deployment passed;
-M2 live edge→Teacher text round-trip passed; M3.0 stock Watcher PTT
-transport/presentation hardware UAT passed**.
+This file preserves verified hardware run observations and reusable acceptance procedures. The current milestone summary is maintained in [STATUS](STATUS.md); planned sequencing belongs in [ROADMAP](ROADMAP.md).
+
+## Historical verified runs
 
 The M1 ingress path was verified on a real SenseCAP Watcher and Raspberry Pi:
 Watcher human detection produced an HTTP notification, the Pi bridge

@@ -1,7 +1,6 @@
 # Teacher ↔ Edge Integration Contract
 
-Status: **deployment contract verified for the pinned Teacher revision; M2 text client
-contract implemented and live edge→Core UAT passed; M3.0 stock Watcher transport/presentation hardware-UAT passed**.
+Current verification state is recorded only in [STATUS](STATUS.md). This file owns request/response and error contracts.
 
 This document describes the boundary between `teacher-edge` and `Lilian0414/teacher`.
 
@@ -31,10 +30,7 @@ presents `data.screen_text` during the audio response; the two-second test tone
 therefore provides an observable presentation interval (the former 150 ms tone
 was audible but too short for reliable visual UAT). This endpoint does not call STT, Teacher Core, conversation logic, or a
 TTS provider; its response proves only stock firmware upload/JSON/audio framing.
-On real hardware, PR #15 head `6a6aa096fee2a522cf549a8ae835cf2a191a6d31`
-was verified to return `200 OK`, present `Teacher Edge audio transport test`
-on the Watcher display, and play the deterministic two-second tone. The M1 alarm
-endpoint and M2 text endpoint are unchanged.
+For the real-hardware observations and tested revision, see [UAT](UAT.md). The M1 alarm endpoint and M2 text endpoint are unchanged.
 
 ## 0. Implemented Watcher ingress contract
 
@@ -56,9 +52,7 @@ M1 implements the device-facing boundary only:
 - The request becomes an in-process `DeviceEvent` with source, device ID, event
   type, timestamp, text, inference, and original request ID.
 
-No Teacher endpoint is consumed by M1, so there is no Teacher revision or API
-schema dependency to pin. A later Teacher adapter must complete the version
-compatibility record below before making calls.
+The notification endpoint does not consume a Teacher API. The separate implemented text adapter consumes the pinned Teacher conversation contract in section 12.
 
 M1.2 deploys, but does not consume, Teacher Core using this runtime contract:
 
@@ -68,13 +62,11 @@ Teacher base branch: main
 Teacher base SHA: c1b6a03c1894df2d2b8994cf3b9a124ea8b381e5
 Entry point: companion-core
 Health: GET http://127.0.0.1:8000/health
-Later M2 endpoints: POST /v1/conversations
+M2 endpoints: POST /v1/conversations
                     POST /v1/conversations/{conversation_id}/messages
 ```
 
-Manual deployment UAT uses the pinned Core OpenAPI schema. M2 now documents and
-contract-tests the exact request/response assumptions consumed by the edge client
-in section 12 below.
+The implemented text client contract is specified in section 12.
 
 ## 1. Ownership rule
 
@@ -86,7 +78,7 @@ If the required behavior cannot be expressed through the current Teacher API, op
 
 ## 2. Known upstream API capabilities
 
-At bootstrap time, Teacher already exposes HTTP boundaries for at least:
+The pinned Teacher Core exposes HTTP boundaries for at least:
 
 - creating a conversation
 - sending a message to a conversation
@@ -94,7 +86,7 @@ At bootstrap time, Teacher already exposes HTTP boundaries for at least:
 - review answer submission
 - proactive invitation checking / response / completion
 
-The first edge milestone only depends on the smallest subset required for one ordinary conversation turn.
+The text adapter consumes the conversation subset documented in section 12. The speech and TTS path is a future contract; see [STATUS](STATUS.md).
 
 Expected conceptual flow:
 
@@ -105,7 +97,7 @@ POST Teacher conversation message
     ↓ assistant response
 ```
 
-Exact paths, request bodies, response schemas, status codes, retry semantics, and error behavior must be verified against the pinned Teacher revision before implementing the client.
+Before implementing the future speech client, verify its exact paths, schemas and error semantics against the pinned Teacher revision. Section 12 records the existing text client contract.
 
 ## 3. Runtime placement
 
@@ -143,9 +135,9 @@ The bridge must not:
 
 ## 5. Conversation session mapping
 
-A Watcher interaction session will need a mapping to a Teacher conversation ID.
+The implemented text endpoint maps an explicit device/session pair to a Teacher conversation ID transiently in memory (section 12). Future Watcher voice session mapping must reuse or revise that contract explicitly.
 
-Initial preference:
+Design constraints:
 
 - bridge creates / obtains a Teacher conversation when a device conversation starts;
 - bridge keeps the current Teacher conversation ID as transient edge session state;
@@ -259,8 +251,6 @@ Examples:
 Concrete retry rules should be implemented only after the exact Teacher API behavior is inspected.
 
 ## 12. M2 implemented Teacher conversation contract
-
-Status: **implemented; live Raspberry Pi → Teacher Core text round-trip UAT passed**.
 
 Compatibility baseline:
 

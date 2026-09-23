@@ -1,8 +1,6 @@
 # Hardware Baseline
 
-Status: **known target hardware; Pi-hosted Teacher Core is hardware-verified,
-while M2 edge-to-Teacher and end-to-end device integration are not yet
-implemented or verified**.
+Hardware inventory and assumptions only; current milestones live in [STATUS](STATUS.md).
 
 ## Raspberry Pi host
 
