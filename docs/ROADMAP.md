@@ -1,6 +1,6 @@
 # Roadmap — next work
 
-M1.1, M1.2, M2, and M3.0 are complete; their **current** state and hardware evidence links live only in [STATUS](STATUS.md). The next increment is M3.1. The original planning baseline remains in git history; this file now describes future work.
+M1.1, M1.2, M2, and M3.0 are complete; their **current** state and hardware evidence links live only in [STATUS](STATUS.md). The next increment is M3.1. The original planning baseline is preserved in [history/ROADMAP_BEFORE_M31.md](history/ROADMAP_BEFORE_M31.md); this file describes future work.
 
 ### M3.1 — End-to-end Teacher voice conversation
 
